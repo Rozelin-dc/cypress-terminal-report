@@ -17,14 +17,7 @@ module.exports = class LogCollectCypressCommand {
       !(options.name === 'task' && options.message.match(/ctrLogMessages/));
 
     const formatLogMessage = (options) => {
-      let message = options.name + '\t' + options.message;
-
-      if (options.expected && options.actual) {
-        message += '\nActual: \t' + utils.jsonStringify(options.actual, false);
-        message += '\nExpected: \t' + utils.jsonStringify(options.expected, false);
-      }
-
-      return message;
+      return JSON.stringify(options, undefined, 2);
     };
 
     Cypress.on('log:added', (options) => {
