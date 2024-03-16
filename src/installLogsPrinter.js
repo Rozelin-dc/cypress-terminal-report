@@ -325,9 +325,9 @@ function logToTerminal(
       icon = LOG_SYMBOLS.warning;
     }
 
-    if (message.length > trim) {
-      processedMessage = message.substring(0, trim) + ' ...';
-    }
+    // if (message.length > trim) {
+    //   processedMessage = message.substring(0, trim) + ' ...';
+    // }
 
     const coloredTypeString = ['red', 'yellow'].includes(color) ?
       chalk[color].bold(typeString + icon + ' ') :
