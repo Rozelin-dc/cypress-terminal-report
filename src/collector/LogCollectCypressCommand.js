@@ -35,6 +35,10 @@ module.exports = class LogCollectCypressCommand {
         this.collectorState.updateLog(log, severity, options.id);
       }
     });
-  }
 
+    Cypress.on('command:start', (command) => {
+      const log = ['command started!', ...command.toJSON()];
+      this.collectorState.addLog([LOG_TYPE.CYPRESS_COMMAND, log.join('\n'), ''], command.id);
+    });
+  }
 }
