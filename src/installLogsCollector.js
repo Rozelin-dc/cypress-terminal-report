@@ -7,6 +7,7 @@ const tv4ErrorTransformer = require('./tv4ErrorTransformer');
 
 const LogCollectBrowserConsole = require("./collector/LogCollectBrowserConsole");
 const LogCollectCypressCommand = require("./collector/LogCollectCypressCommand");
+const LogCollectCypressCommandStart = require("./collector/LogCollectCypressCommandStart");
 const LogCollectCypressRequest = require("./collector/LogCollectCypressRequest");
 const LogCollectCypressIntercept = require("./collector/LogCollectCypressIntercept");
 const LogCollectCypressXhr = require("./collector/LogCollectCypressXhr");
@@ -25,7 +26,7 @@ const logsTxtFormatter = require("./outputProcessor/logsTxtFormatter");
  * Needs to be added to support file.
  *
  * @see ./installLogsCollector.d.ts
- * @type {import('./installLogsCollector')} 
+ * @type {import('./installLogsCollector')}
  */
 function installLogsCollector(config = {}) {
   validateConfig(config);
@@ -63,6 +64,9 @@ function registerLogCollectorTypes(logCollectorState, config) {
   }
   if (config.collectTypes.includes(LOG_TYPE.CYPRESS_COMMAND)) {
     (new LogCollectCypressCommand(logCollectorState, config)).register();
+  }
+  if (config.collectTypes.includes(LOG_TYPE.CYPRESS_COMMAND_START)) {
+    (new LogCollectCypressCommandStart(logCollectorState, config)).register();
   }
   if (config.collectTypes.includes(LOG_TYPE.CYPRESS_INTERCEPT) && semver.gte(Cypress.version, '6.0.0')) {
     (new LogCollectCypressIntercept(logCollectorState, config)).register();

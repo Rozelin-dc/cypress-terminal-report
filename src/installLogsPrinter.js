@@ -315,6 +315,10 @@ function logToTerminal(
       color = 'green';
       icon = LOG_SYMBOLS.success;
       trim = options.commandTrimLength || 800;
+    } else if (type === LOG_TYPES.CYPRESS_COMMAND_START) {
+      color = 'blue';
+      icon = LOG_SYMBOLS.debug;
+      trim = options.commandTrimLength || 800;
     }
 
     if (severity === CONSTANTS.SEVERITY.ERROR) {

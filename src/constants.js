@@ -15,6 +15,7 @@ module.exports = {
     CYPRESS_REQUEST: 'cy:request',
     CYPRESS_INTERCEPT: 'cy:intercept',
     CYPRESS_COMMAND: 'cy:command',
+    CYPRESS_COMMAND_START: 'cy:command:start',
 
     PLUGIN_LOG_TYPE: 'ctr:info',
   },

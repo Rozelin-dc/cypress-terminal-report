@@ -23,7 +23,8 @@
           "cy:fetch",
           "cy:request",
           "cy:intercept",
-          "cy:command"
+          "cy:command",
+          "cy:command:start"
         ]
       }
     },

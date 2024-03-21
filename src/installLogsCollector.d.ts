@@ -13,6 +13,7 @@ declare namespace installLogsCollector {
     'cy:request' |
     'cy:intercept' |
     'cy:command' |
+    'cy:command:start' |
     'ctr:info';
 
   type Log = {
