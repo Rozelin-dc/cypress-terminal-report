@@ -3,7 +3,6 @@ const CONSTANTS = require('../constants');
 const utils = require('../utils');
 
 module.exports = class LogCollectCypressCommand {
-
   constructor(collectorState, config) {
     this.config = config;
     this.collectorState = collectorState;
@@ -17,7 +16,14 @@ module.exports = class LogCollectCypressCommand {
       !(options.name === 'task' && options.message.match(/ctrLogMessages/));
 
     const formatLogMessage = (options) => {
-      return JSON.stringify(options, undefined, 2);
+      let message = 'name: ' + options.name + '\nmessage: ' + options.message;
+
+      if (options.expected && options.actual) {
+        message += '\nActual: \t' + utils.jsonStringify(options.actual, false);
+        message += '\nExpected: \t' + utils.jsonStringify(options.expected, false);
+      }
+
+      return message;
     };
 
     Cypress.on('log:added', (options) => {
@@ -31,14 +37,10 @@ module.exports = class LogCollectCypressCommand {
     Cypress.on('log:changed', (options) => {
       if (isOfInterest(options)) {
         const log = formatLogMessage(options);
-        const severity = options.state === 'failed' ? CONSTANTS.SEVERITY.ERROR : CONSTANTS.SEVERITY.SUCCESS;
+        const severity =
+          options.state === 'failed' ? CONSTANTS.SEVERITY.ERROR : CONSTANTS.SEVERITY.SUCCESS;
         this.collectorState.updateLog(log, severity, options.id);
       }
     });
-
-    Cypress.on('command:start', (command) => {
-      const log = ['command started!', ...command.toJSON()];
-      this.collectorState.addLog([LOG_TYPE.CYPRESS_COMMAND, log.join('\n'), ''], command.id);
-    });
   }
-}
+};
