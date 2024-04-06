@@ -14,6 +14,7 @@
 const chalk = require('chalk');
 const path = require('path');
 const tv4 = require('tv4');
+const fs = require('fs');
 
 const schema = require('./installLogsPrinter.schema.json');
 const tv4ErrorTransformer = require('./tv4ErrorTransformer');
@@ -24,8 +25,8 @@ const KNOWN_TYPES = Object.values(CONSTANTS.LOG_TYPES);
 const CustomOutputProcessor = require('./outputProcessor/CustomOutputProcessor');
 const NestedOutputProcessorDecorator = require('./outputProcessor/NestedOutputProcessorDecorator');
 const OUTPUT_PROCESSOR_TYPE = {
-  'json': require('./outputProcessor/JsonOutputProcessor'),
-  'txt': require('./outputProcessor/TextOutputProcessor'),
+  json: require('./outputProcessor/JsonOutputProcessor'),
+  txt: require('./outputProcessor/TextOutputProcessor'),
 };
 
 const LOG_SYMBOLS = (() => {
@@ -36,8 +37,8 @@ const LOG_SYMBOLS = (() => {
       success: '✔',
       info: '✱',
       debug: '⚈',
-      route: '➟'
-    }
+      route: '➟',
+    };
   } else {
     return {
       error: 'x',
@@ -45,8 +46,8 @@ const LOG_SYMBOLS = (() => {
       success: '+',
       info: 'i',
       debug: '%',
-      route: '~'
-    }
+      route: '~',
+    };
   }
 })();
 
@@ -62,12 +63,14 @@ let outputProcessors = [];
  * @type {import('./installLogsPrinter')}
  */
 function installLogsPrinter(on, options = {}) {
-  options.printLogsToFile = options.printLogsToFile || "onFail";
-  options.printLogsToConsole = options.printLogsToConsole || "onFail";
+  options.printLogsToFile = options.printLogsToFile || 'onFail';
+  options.printLogsToConsole = options.printLogsToConsole || 'onFail';
   const result = tv4.validateMultiple(options, schema);
 
   if (!result.valid) {
-    throw new CtrError(`Invalid plugin install options: ${tv4ErrorTransformer.toReadableString(result.errors)}`);
+    throw new CtrError(
+      `Invalid plugin install options: ${tv4ErrorTransformer.toReadableString(result.errors)}`
+    );
   }
 
   on('task', {
@@ -79,15 +82,11 @@ function installLogsPrinter(on, options = {}) {
           ? compactLogs(messages, options.compactLogs)
           : messages;
 
-      const isHookAndShouldLog = data.isHook &&
-        (options.includeSuccessfulHookLogs || data.state === 'failed');
+      const isHookAndShouldLog =
+        data.isHook && (options.includeSuccessfulHookLogs || data.state === 'failed');
 
-      if (options.outputTarget && options.printLogsToFile !== "never") {
-        if (
-          data.state === "failed" ||
-          options.printLogsToFile === "always" ||
-          isHookAndShouldLog
-        ) {
+      if (options.outputTarget && options.printLogsToFile !== 'never') {
+        if (data.state === 'failed' || options.printLogsToFile === 'always' || isHookAndShouldLog) {
           let outputFileMessages =
             typeof options.outputCompactLogs === 'number'
               ? compactLogs(messages, options.outputCompactLogs)
@@ -101,9 +100,9 @@ function installLogsPrinter(on, options = {}) {
       }
 
       if (
-        (options.printLogsToConsole === "onFail" && data.state !== "passed")
-        || options.printLogsToConsole === "always"
-        || isHookAndShouldLog
+        (options.printLogsToConsole === 'onFail' && data.state !== 'passed') ||
+        options.printLogsToConsole === 'always' ||
+        isHookAndShouldLog
       ) {
         logToTerminal(terminalMessages, options, data);
       }
@@ -120,7 +119,7 @@ function installLogsPrinter(on, options = {}) {
     [CONSTANTS.TASK_NAME_OUTPUT]: () => {
       logToFiles(options);
       return null;
-    }
+    },
   });
 
   if (options.outputTarget) {
@@ -140,15 +139,13 @@ function enableLogToFilesOnAfterRun(on, /** @type {PluginOptions} */ options) {
 
 function logToFiles(/** @type {PluginOptions} */ options) {
   outputProcessors.forEach((processor) => {
-    if (Object.entries(writeToFileMessages).length !== 0){
+    if (Object.entries(writeToFileMessages).length !== 0) {
       processor.write(writeToFileMessages);
-      if (options.outputVerbose !== false)
-        logOutputTarget(processor);
+      if (options.outputVerbose !== false) logOutputTarget(processor);
     }
   });
   writeToFileMessages = {};
 }
-
 
 function logOutputTarget(processor) {
   let message;
@@ -191,9 +188,11 @@ function installOutputProcessors(on, /** @type {PluginOptions} */ options) {
       const parts = file.split('|');
       const root = parts[0];
       const ext = parts[1];
-      outputProcessors.push(new NestedOutputProcessorDecorator(root, options.specRoot, ext, (nestedFile) => {
-        return createProcessorFromType(nestedFile, type);
-      }));
+      outputProcessors.push(
+        new NestedOutputProcessorDecorator(root, options.specRoot, ext, (nestedFile) => {
+          return createProcessorFromType(nestedFile, type);
+        })
+      );
     } else {
       outputProcessors.push(createProcessorFromType(file, type));
     }
@@ -206,8 +205,10 @@ function compactLogs(
   /** @type {Log[]} */
   logs,
   /** @type {number} */
-  keepAroundCount) {
-  const failingIndexes = logs.filter((log) => log.severity === CONSTANTS.SEVERITY.ERROR)
+  keepAroundCount
+) {
+  const failingIndexes = logs
+    .filter((log) => log.severity === CONSTANTS.SEVERITY.ERROR)
     .map((log) => logs.indexOf(log));
 
   const includeIndexes = new Array(logs.length);
@@ -225,8 +226,8 @@ function compactLogs(
     compactedLogs.push({
       type: CONSTANTS.LOG_TYPES.PLUGIN_LOG_TYPE,
       message: `[ ... ${count} omitted logs ... ]`,
-      severity: CONSTANTS.SEVERITY.SUCCESS
-  });
+      severity: CONSTANTS.SEVERITY.SUCCESS,
+    });
 
   let excludeCount = 0;
   for (let i = 0; i < includeIndexes.length; i++) {
@@ -255,15 +256,19 @@ function logToTerminal(
   /** @type {PluginOptions} */
   options,
   /** @type {Data} */
-  data) {
+  data
+) {
   const tabLevel = data.level || 0;
   const levelPadding = '  '.repeat(Math.max(0, tabLevel - 1));
   const padding = CONSTANTS.PADDING.LOG + levelPadding;
   const padType = (type) =>
     new Array(Math.max(padding.length - type.length - 3, 0)).join(' ') + type + ' ';
 
+  const logs = [];
+
   if (data.consoleTitle) {
-    console.log(' '.repeat(4) + levelPadding + chalk.gray(data.consoleTitle));
+    logs.push(' '.repeat(4) + levelPadding + chalk.gray(data.consoleTitle));
+    // console.log(' '.repeat(4) + levelPadding + chalk.gray(data.consoleTitle));
   }
 
   messages.forEach(({type, message, severity, timeString}) => {
@@ -333,23 +338,30 @@ function logToTerminal(
     //   processedMessage = message.substring(0, trim) + ' ...';
     // }
 
-    const coloredTypeString = ['red', 'yellow'].includes(color) ?
-      chalk[color].bold(typeString + icon + ' ') :
-      chalk[color](typeString + icon + ' ');
+    const coloredTypeString = ['red', 'yellow'].includes(color)
+      ? chalk[color].bold(typeString + icon + ' ')
+      : chalk[color](typeString + icon + ' ');
 
     if (timeString) {
-      console.log(chalk.gray(`${padding}Time: ${timeString}`));
+      logs.push(chalk.gray(`${padding}Time: ${timeString}`));
+      // console.log(chalk.gray(`${padding}Time: ${timeString}`));
     }
 
-    console.log(
-      coloredTypeString,
-      processedMessage.replace(/\n/g, '\n' + padding)
-    );
+    logs.push(coloredTypeString, processedMessage.replace(/\n/g, '\n' + padding));
+    // console.log(
+    //   coloredTypeString,
+    //   processedMessage.replace(/\n/g, '\n' + padding)
+    // );
   });
 
   if (messages.length !== 0 && !data.continuous) {
-    console.log('\n');
+    logs.push('\n');
+    // console.log('\n');
   }
+
+  const fd = fs.openSync('cypress-terminal-report.log', 'a');
+  fs.writeFile(fd, logs.join('\n'));
+  fs.closeSync(fd);
 }
 
 module.exports = installLogsPrinter;
