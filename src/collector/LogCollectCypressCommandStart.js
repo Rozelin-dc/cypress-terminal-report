@@ -13,9 +13,24 @@ module.exports = class LogCollectCypressCommand {
       log.push(`name: ${command.attributes.name}`);
       log.push(`logs: ${command.attributes.logs}`);
       log.push(`args: ${JSON.stringify(command.attributes.args)}`);
+      log.push(`index: ${command.attributes.myIndex}`);
 
       this.collectorState.addLog(
         [LOG_TYPE.CYPRESS_COMMAND_START, log.join('\n'), ''],
+        command.attributes.id
+      );
+    });
+
+    Cypress.on('command:end', (command) => {
+      const log = ['command ended!'];
+
+      log.push(`name: ${command.attributes.name}`);
+      log.push(`logs: ${command.attributes.logs}`);
+      log.push(`args: ${JSON.stringify(command.attributes.args)}`);
+      log.push(`index: ${command.attributes.myIndex}`);
+
+      this.collectorState.addLog(
+        [LOG_TYPE.CYPRESS_COMMAND_END, log.join('\n'), ''],
         command.attributes.id
       );
     });
